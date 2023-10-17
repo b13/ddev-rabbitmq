@@ -19,10 +19,12 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
     volumes:
-      - "./rabbitmq-build/enabled_plugins:/etc/rabbitmq/enabled_plugins"
+      - "rabbitmq:/var/lib/rabbitmq/mnesia"
+      - "./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
       - ".:/mnt/ddev_config"
   web:
     links:
       - rabbitmq:rabbitmq
 volumes:
   rabbitmq:
+    name: "ddev-${DDEV_SITENAME}_rabbitmq"
