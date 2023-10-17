@@ -1,6 +1,6 @@
 # Details about the install.yaml file are at https://ddev.readthedocs.io/en/latest/users/extend/additional-services/#sections-and-features-of-ddev-get-add-on-installyaml
 
-name: your-addon
+name: rabbitmq
 
 # pre_install_actions - list of actions to run before installing the addon.
 # Examples would be removing an extraneous docker volume,
@@ -58,8 +58,8 @@ pre_install_actions:
 # if it hasn't been modified by the user.
 # DDEV environment variables can be interpolated into these filenames
 project_files:
-- docker-compose.addon-template.yaml
-# - extra_files/
+  - docker-compose.rabbitmq.yaml
+  - ./rabbitmq-build
 # - somefile.sh
 
 # List of files and directories that are copied into the global .ddev directory
