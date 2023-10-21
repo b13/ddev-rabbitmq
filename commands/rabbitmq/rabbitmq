@@ -1,0 +1,133 @@
+#! /usr/bin/env bash
+#ddev-generated
+
+## Description: Manage parts of rabbitmq
+## Usage: rabbitmq
+## Example: ddev rabbitmq
+
+# @todo
+# * Test amqp, whatever it is doing
+
+CMD=$1
+
+# Subcommands allowed to watch
+ALLOWED_DISPLAY_ARGUMENTS=("overview" "connections" "channels" "consumers" "exchanges" "queues" "bindings" "users" "vhosts" "permissions" "nodes" "parameters" "policies" "operator_policies" "vhost_limits" )
+
+YAML_FILE=/mnt/ddev_config/config.rabbitmq.yaml
+# YAML_FILE=config.rabbitmq.yaml
+
+
+function watcher() {
+  subcommand=$1
+  interval=$2
+
+  if [ "$subcommand" = "overview" ]; then
+    display_argument="show $subcommand"
+  else
+    display_argument="list $subcommand"
+  fi
+
+  if [[ " ${ALLOWED_DISPLAY_ARGUMENTS[*]} " = *" $subcommand "* ]]; then
+      while true; do
+          output=$(rabbitmqadmin $display_argument -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS")
+          clear
+          echo "$output"
+          echo "Refresh interval: $interval sec - $(date)"
+          sleep $interval
+      done
+  else
+    echo -e "Watch subcommand '$subcommand' not allowed, use one of these:\n * ${ALLOWED_DISPLAY_ARGUMENTS[*]}"
+  fi
+}
+
+case $CMD in
+  apply)
+    if ! command -v yq >/dev/null 2>&1; then
+        apk add yq > /dev/null 2>&1
+    fi
+
+    echo "Apply config /mnt/ddev_config/.ddev/config.rabbitmq.yaml"
+
+    # ✅Install plugins
+    plugins_array=$(yq eval '.rabbitmq.plugins[]' "$YAML_FILE")
+    plugins=$(echo "${plugins_array[*]}" | tr '\n' ' ' | xargs)
+    rabbitmq-plugins enable "$plugins"
+
+    # @todo: Create vhost only if it does not exits
+    # rabbitmqctl add_vhost Some_Virtual_Host
+    # rabbitmqctl set_permissions -p Some_Virtual_Host guest ".*" ".*" ".*"
+
+    # ⚠️Create user
+    users_json=$(rabbitmqctl list_users --silent --formatter json)
+    readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
+    readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
+
+    for users in "${users[@]}"; do
+      name=$(echo "$users" | yq '.name' -)
+
+      if [[ ! " ${users_existing[*]} " =~ $name ]]; then
+        password=$(echo "$users" | yq '.password' -)
+        rabbitmqctl add_user "$name" "$password"
+        tags=$(echo "$users" | yq '.tags[]' -)
+        comma_seperated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
+        rabbitmqctl set_user_tags "$name" "$comma_seperated"
+
+        permissions=$(echo "$users" | yq '.permissions[]' -)
+        for permission in "${permissions[@]}"; do
+          vhost=$(echo "$permission" | yq '.vhost' -)
+          conf=$(echo "$permission" | yq '.conf' -)
+          write=$(echo "$permission" | yq '.write' -)
+          read=$(echo "$permission" | yq '.read' -)
+          # @todo: if one of these, is null do not set permissions
+          rabbitmqctl set_permissions -p $vhost $name "$conf" "$write" "$read"
+        done
+      else
+        echo "ℹ️User '$name' already exists! Not modifying! To update a queue please delete it first."
+      fi
+    done
+
+    # ✅Create a queue
+    queues_existing=$(rabbitmqctl list_queues --silent --formatter json)
+    readarray queues_existing < <(echo "$queues_existing" | yq -o=y -I=0 '.[].name' -)
+    readarray queues < <(yq -o=j -I=0 '.rabbitmq.queue[]' $YAML_FILE )
+    for queue in "${queues[@]}"; do
+      name=$(echo "$queue" | yq '.name' -)
+
+      if [[ ! " ${queues_existing[*]} " =~ $name ]]; then
+        vhost=$(echo "$queue" | yq '.vhost' -)
+        durable=$(echo "$queue" | yq '.durable' -)
+
+        rabbitmqadmin declare queue --vhost="$vhost" name="$name" durable="$durable"  -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS"
+      else
+        echo "ℹ️Queue '$name' already exists! Not modifying! To update a queue please delete it first."
+      fi
+    done
+    ;;
+
+  watch)
+    subcommand="$2"
+    subcommand=${subcommand:=overview}
+    interval="$3"
+    interval=${interval:=2}
+
+    watcher "$subcommand" "$interval"
+    ;;
+
+  --help|*)
+    echo "——————————————"
+    echo -e "\033[1mExample Usage:\033[0m"
+    echo "——————————————"
+    echo -e "\033[1mApply\033[0m"
+    echo "—————"
+    echo "Create queues, users and add 'plugins' according to configuration (see .ddev/config.rabbitmq.yaml)"
+    echo "👉 ddev rabbitmq apply"
+    echo ""
+    echo -e "\033[1mWatcher\033[0m"
+    echo "———————"
+    echo "A little wrapper around 'rabbitmqadmin' to be able to watch e.g. queues"
+    echo "👉 ddev rabbitmq watch <command> <interval>"
+    echo -e "Possible <command> values:\n * ${ALLOWED_DISPLAY_ARGUMENTS[*]}"
+    echo ""
+    echo -e "ℹ️ To use the rabbitmqadmin command run 'ddev rabbitmqadmin --help' for details.\nThis command passes all values to rabbitmqadmin within the container."
+    ;;
+esac

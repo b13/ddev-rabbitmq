@@ -1,0 +1,29 @@
+#ddev-generated
+rabbitmq:
+  vhost:
+    - host1
+    - host2
+  queue:
+    - vhost: /
+      name: ddev-queue
+      durable: true
+    - vhost: /
+      name: ddev-additional
+      durable: true
+  user:
+      - name: ddev-admin
+        password: password
+        tags:
+          - administrator
+          - management
+        permissions:
+          - vhost: /
+            conf: .*
+            write: .*
+            read: .*
+      - name: ddev-read
+        password: password
+        tags:
+          - policymaker
+  plugins:
+      - rabbitmq_management

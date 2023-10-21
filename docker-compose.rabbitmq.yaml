@@ -4,7 +4,7 @@ services:
   rabbitmq:
     container_name: ddev-${DDEV_SITENAME}-rabbitmq
     hostname: ${DDEV_SITENAME}-rabbitmq
-    image: "rabbitmq:3-management"
+    image: "rabbitmq:3-management-alpine"
     expose:
       - 15672
     environment:
@@ -20,7 +20,6 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     volumes:
       - "rabbitmq:/var/lib/rabbitmq/mnesia"
-      - "./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins"
       - ".:/mnt/ddev_config"
   web:
     links:

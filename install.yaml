@@ -59,8 +59,11 @@ pre_install_actions:
 # DDEV environment variables can be interpolated into these filenames
 project_files:
   - docker-compose.rabbitmq.yaml
-  - ./rabbitmq
-# - somefile.sh
+  - commands/rabbitmq/rabbitmq
+  - commands/rabbitmq/rabbitmqadmin
+  - commands/rabbitmq/rabbitmqctl
+  - config.rabbitmq.yaml
+  - rabbitmq-schema.json
 
 # List of files and directories that are copied into the global .ddev directory
 # DDEV environment variables can be interpolated into these filenames

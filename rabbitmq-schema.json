@@ -1,0 +1,72 @@
+{
+  "$schema": "./config.rabbitmq.yaml",
+  "type": "object",
+  "properties": {
+    "rabbitmq": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "management",
+                    "policymaker",
+                    "monitoring",
+                    "administrator"
+                  ]
+                }
+              }
+            },
+            "required": ["name", "password", "tags"]
+          }
+        },
+        "queue": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "vhost": {
+                "type": "string",
+                "pattern": "^([a-zA-Z_\-\/]*)$"
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^([a-zA-Z_-]*)$"
+              },
+              "durable": {
+                "type": "boolean"
+              }
+            },
+            "required": ["name"]
+          }
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "vhost": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([a-zA-Z_\-0-9]*)$"
+          }
+        }
+      }
+    }
+  },
+  "required": ["rabbitmq"]
+}
