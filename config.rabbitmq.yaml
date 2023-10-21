@@ -4,11 +4,11 @@ rabbitmq:
     - host1
     - host2
   queue:
-    - vhost: /
-      name: ddev-queue
+    - name: ddev-queue
+      vhost: /
       durable: true
-    - vhost: /
-      name: ddev-additional
+    - name: ddev-additional
+      vhost: /
       durable: true
   user:
       - name: ddev-admin

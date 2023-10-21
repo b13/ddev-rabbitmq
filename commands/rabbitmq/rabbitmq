@@ -63,10 +63,10 @@ case $CMD in
     readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
 
     for users in "${users[@]}"; do
-      name=$(echo "$users" | yq '.name' -)
+      name=$(echo "$users" | yq '.name // ""' -)
 
       if [[ ! " ${users_existing[*]} " =~ $name ]]; then
-        password=$(echo "$users" | yq '.password' -)
+        password=$(echo "$users" | yq '.password // ""' -)
         rabbitmqctl add_user "$name" "$password"
         tags=$(echo "$users" | yq '.tags[]' -)
         comma_seperated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
@@ -74,15 +74,15 @@ case $CMD in
 
         permissions=$(echo "$users" | yq '.permissions[]' -)
         for permission in "${permissions[@]}"; do
-          vhost=$(echo "$permission" | yq '.vhost' -)
-          conf=$(echo "$permission" | yq '.conf' -)
-          write=$(echo "$permission" | yq '.write' -)
-          read=$(echo "$permission" | yq '.read' -)
+          vhost=$(echo "$permission" | yq '.vhost // "/"' -)
+          conf=$(echo "$permission" | yq '.conf // ".*"' -)
+          write=$(echo "$permission" | yq '.write // ".*"' -)
+          read=$(echo "$permission" | yq '.read // ".*"' -)
           # @todo: if one of these, is null do not set permissions
-          rabbitmqctl set_permissions -p $vhost $name "$conf" "$write" "$read"
+          rabbitmqctl set_permissions -p "$vhost" "$name" "$conf" "$write" "$read"
         done
       else
-        echo "ℹ️User '$name' already exists! Not modifying! To update a queue please delete it first."
+        echo "ℹ️User '$name' already exists! To update a queue please delete it first."
       fi
     done
 
@@ -94,12 +94,12 @@ case $CMD in
       name=$(echo "$queue" | yq '.name' -)
 
       if [[ ! " ${queues_existing[*]} " =~ $name ]]; then
-        vhost=$(echo "$queue" | yq '.vhost' -)
-        durable=$(echo "$queue" | yq '.durable' -)
-
+        vhost=$(echo "$queue" | yq '.vhost // "/"' -)
+        durable=$(echo "$queue" | yq '.durable // "true"' -)
+        echo -n "✅ '$name': "
         rabbitmqadmin declare queue --vhost="$vhost" name="$name" durable="$durable"  -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS"
       else
-        echo "ℹ️Queue '$name' already exists! Not modifying! To update a queue please delete it first."
+        echo "ℹ️Queue '$name' already exists! To update the queue please delete it first."
       fi
     done
     ;;
