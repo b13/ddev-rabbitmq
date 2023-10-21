@@ -9,16 +9,24 @@ machine itself.
 ddev get ochorocho/ddev-rabbitmq && ddev restart
 ```
 
-The [rabbitmq-build](rabbitmq-build) directory contains the enabled plugins, these are required for having a functioning 
-RabbitMQ service, as the container would otherwise stop itself shortly after starting. The plugins themselves are what 
-enables the management UI and the graphs within it.
-
 ## Configuration
 
 From within the container, the RabbitMQ container is reached at hostname: `ddev-<projectname>-rabbitmq`, port: 5672, so
 the server URL might be `amqp://ddev-<projectname>-rabbitmq:5672`.
 
 For more details check the connection section below.
+
+### Apply YAML configuration
+
+The [config.rabbitmq.yaml](config.rabbitmq.yaml) describes
+vhosts, queues, users, and plugins.
+
+The configuration can be applied with the following command: 
+```bash
+ddev rabbitmq apply
+```
+
+:warning: This may not cover all possible configuration values! But it is a good start.
 
 ## Connection
 

@@ -26,4 +26,5 @@ rabbitmq:
         tags:
           - policymaker
   plugins:
+      # Required!
       - rabbitmq_management

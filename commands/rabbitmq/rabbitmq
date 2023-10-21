@@ -42,6 +42,8 @@ function watcher() {
 
 case $CMD in
   apply)
+    # The RabbitMQ container does not contain yq
+    # But it is needed to apply the configuration
     if ! command -v yq >/dev/null 2>&1; then
         apk add yq > /dev/null 2>&1
     fi
@@ -53,7 +55,7 @@ case $CMD in
     plugins=$(echo "${plugins_array[*]}" | tr '\n' ' ' | xargs)
     rabbitmq-plugins enable "$plugins"
 
-    # @todo: Create vhost only if it does not exits
+    # @todo: Create vhost only if it does not exist
     # rabbitmqctl add_vhost Some_Virtual_Host
     # rabbitmqctl set_permissions -p Some_Virtual_Host guest ".*" ".*" ".*"
 
