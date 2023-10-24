@@ -1,14 +1,14 @@
 #ddev-generated
 rabbitmq:
   vhost:
-    - host1
-    - host2
+    - name: ddev-vhost
+      default-queue-type: classic
   queue:
     - name: ddev-queue
-      vhost: /
+      vhost: ddev-vhost
       durable: true
     - name: ddev-additional
-      vhost: /
+      vhost: ddev-vhost
       durable: true
   user:
       - name: ddev-admin
@@ -17,14 +17,10 @@ rabbitmq:
           - administrator
           - management
         permissions:
-          - vhost: /
+          - vhost: ddev-vhost
             conf: .*
             write: .*
             read: .*
-      - name: ddev-read
-        password: password
-        tags:
-          - policymaker
   plugins:
       # Required!
       - rabbitmq_management
