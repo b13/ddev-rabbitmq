@@ -38,6 +38,81 @@ function watcher() {
   fi
 }
 
+function add_vhosts() {
+  vhosts_json=$(rabbitmqctl list_vhosts --formatter json)
+  readarray vhosts_existing < <(echo "$vhosts_json" | yq -o=y -I=0 '.[].name' -)
+  readarray vhosts < <(yq -o=j -I=0 '.rabbitmq.vhost[]' $YAML_FILE )
+  for vhost in "${vhosts[@]}"; do
+    name=$(echo "$vhost" | yq '.name // ""' -)
+
+    if [[ ! " ${vhosts_existing[*]} " =~ $name ]]; then
+      description=$(echo "$vhost" | yq '.description // ""' -)
+      description_option=$([ -z "$description" ] && echo "" || echo "--description \"$description\"")
+
+      default_queue_type=$(echo "$vhost" | yq '.default-queue-type // ""' -)
+      default_queue_type_option=$([ -z "$default_queue_type" ] && echo "" || echo "--default-queue-type $default_queue_type")
+
+      tags=$(echo "$vhost" | yq '.tags[]' -)
+      comma_separated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
+      tags_option=$([ -z "$comma_separated" ] && echo "" || echo "--tags $comma_separated")
+
+      echo -n "✅ '$name': "
+      rabbitmqctl add_vhost $name $description_option $tags_option $default_queue_type_option
+    else
+      echo "ℹ️vhost '$name' already exists! To update a vhost please delete it first."
+    fi
+  done
+}
+
+function add_queues() {
+  readarray queues < <(yq -o=j -I=0 '.rabbitmq.queue[]' $YAML_FILE )
+  for queue in "${queues[@]}"; do
+    name=$(echo "$queue" | yq '.name' -)
+    vhost=$(echo "$queue" | yq '.vhost // "/"' -)
+
+    queues_existing=$(rabbitmqctl list_queues --silent --formatter json --vhost "$vhost")
+    readarray queues_existing < <(echo "$queues_existing" | yq -o=y -I=0 '.[].name' -)
+
+    if [[ ! " ${queues_existing[*]} " =~ $name ]]; then
+      durable=$(echo "$queue" | yq '.durable // "true"' -)
+      echo -n "✅ '$name': "
+      rabbitmqadmin declare queue --vhost="$vhost" name="$name" durable="$durable"  -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS"
+    else
+      echo "ℹ️Queue '$name' already exists in vhost '$vhost'! To update the queue please delete it first."
+    fi
+  done
+}
+
+function add_users() {
+  users_json=$(rabbitmqctl list_users --silent --formatter json)
+  readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
+  readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
+
+  for users in "${users[@]}"; do
+    name=$(echo "$users" | yq '.name // ""' -)
+
+    if [[ ! " ${users_existing[*]} " =~ $name ]]; then
+      echo -n "✅ '$name': "
+      password=$(echo "$users" | yq '.password // ""' -)
+      rabbitmqctl add_user "$name" "$password"
+      tags=$(echo "$users" | yq '.tags[]' -)
+      comma_separated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
+      rabbitmqctl set_user_tags "$name" "$comma_separated"
+
+      permissions=$(echo "$users" | yq '.permissions[]' -)
+      for permission in "${permissions[@]}"; do
+        vhost=$(echo "$permission" | yq '.vhost // "/"' -)
+        conf=$(echo "$permission" | yq '.conf // ".*"' -)
+        write=$(echo "$permission" | yq '.write // ".*"' -)
+        read=$(echo "$permission" | yq '.read // ".*"' -)
+        rabbitmqctl set_permissions -p "$vhost" "$name" "$conf" "$write" "$read"
+      done
+    else
+      echo "ℹ️User '$name' already exists! To update a user please delete it first."
+    fi
+  done
+}
+
 case $CMD in
   apply)
     # The RabbitMQ container does not contain yq
@@ -48,86 +123,20 @@ case $CMD in
 
     echo "Apply config $YAML_FILE"
 
-    # ✅Install plugins
     plugins_array=$(yq eval '.rabbitmq.plugins[]' "$YAML_FILE")
     plugins=$(echo "${plugins_array[*]}" | tr '\n' ' ' | xargs)
     rabbitmq-plugins enable "$plugins"
 
-    # ✅Add vhosts
-    vhosts_json=$(rabbitmqctl list_vhosts --formatter json)
-    readarray vhosts_existing < <(echo "$vhosts_json" | yq -o=y -I=0 '.[].name' -)
-    readarray vhosts < <(yq -o=j -I=0 '.rabbitmq.vhost[]' $YAML_FILE )
-    for vhost in "${vhosts[@]}"; do
-      name=$(echo "$vhost" | yq '.name // ""' -)
-
-      if [[ ! " ${vhosts_existing[*]} " =~ $name ]]; then
-        description=$(echo "$vhost" | yq '.description // ""' -)
-        description_option=$([ -z "$description" ] && echo "" || echo "--description \"$description\"")
-
-        default_queue_type=$(echo "$vhost" | yq '.default-queue-type // ""' -)
-        default_queue_type_option=$([ -z "$default_queue_type" ] && echo "" || echo "--default-queue-type $default_queue_type")
-
-        tags=$(echo "$vhost" | yq '.tags[]' -)
-        comma_separated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
-        tags_option=$([ -z "$comma_separated" ] && echo "" || echo "--tags $comma_separated")
-
-        rabbitmqctl add_vhost $name $description_option $tags_option $default_queue_type_option
-      else
-        echo "ℹ️vhost '$name' already exists! To update a vhost please delete it first."
-      fi
-    done
-
+    add_vhosts
     # Ensure the default admin "rabbitmq" has permissions for all virtual hosts
     rabbitmqctl set_permissions_globally "rabbitmq" ".*" ".*" ".*" > /dev/null
-
-    # ✅Create a queue
-
-    readarray queues < <(yq -o=j -I=0 '.rabbitmq.queue[]' $YAML_FILE )
-    for queue in "${queues[@]}"; do
-      name=$(echo "$queue" | yq '.name' -)
-      vhost=$(echo "$queue" | yq '.vhost // "/"' -)
-
-      queues_existing=$(rabbitmqctl list_queues --silent --formatter json --vhost "$vhost")
-      readarray queues_existing < <(echo "$queues_existing" | yq -o=y -I=0 '.[].name' -)
-
-      if [[ ! " ${queues_existing[*]} " =~ $name ]]; then
-        durable=$(echo "$queue" | yq '.durable // "true"' -)
-        echo -n "✅ '$name': "
-        rabbitmqadmin declare queue --vhost="$vhost" name="$name" durable="$durable"  -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS"
-      else
-        echo "ℹ️Queue '$name' already exists in vhost '$vhost'! To update the queue please delete it first."
-      fi
-    done
-
-    # ✅️Create user
-    users_json=$(rabbitmqctl list_users --silent --formatter json)
-    readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
-    readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
-
-    for users in "${users[@]}"; do
-      name=$(echo "$users" | yq '.name // ""' -)
-
-      if [[ ! " ${users_existing[*]} " =~ $name ]]; then
-        password=$(echo "$users" | yq '.password // ""' -)
-        rabbitmqctl add_user "$name" "$password"
-        tags=$(echo "$users" | yq '.tags[]' -)
-        comma_separated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
-        rabbitmqctl set_user_tags "$name" "$comma_separated"
-
-        permissions=$(echo "$users" | yq '.permissions[]' -)
-        for permission in "${permissions[@]}"; do
-          vhost=$(echo "$permission" | yq '.vhost // "/"' -)
-          conf=$(echo "$permission" | yq '.conf // ".*"' -)
-          write=$(echo "$permission" | yq '.write // ".*"' -)
-          read=$(echo "$permission" | yq '.read // ".*"' -)
-          rabbitmqctl set_permissions -p "$vhost" "$name" "$conf" "$write" "$read"
-        done
-      else
-        echo "ℹ️User '$name' already exists! To update a user please delete it first."
-      fi
-    done
+    add_queues
+    add_users
     ;;
 
+  wipe)
+    echo "Wipe stuff"
+    ;;
   watch)
     subcommand="$2"
     subcommand=${subcommand:=overview}
