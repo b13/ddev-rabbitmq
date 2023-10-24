@@ -88,18 +88,18 @@ function add_users() {
   readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
   readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
 
-  for users in "${users[@]}"; do
-    name=$(echo "$users" | yq '.name // ""' -)
+  for user in "${users[@]}"; do
+    name=$(echo "$user" | yq '.name // ""' -)
 
     if [[ ! " ${users_existing[*]} " =~ $name ]]; then
       echo -n "✅ '$name': "
-      password=$(echo "$users" | yq '.password // ""' -)
+      password=$(echo "$user" | yq '.password // ""' -)
       rabbitmqctl add_user "$name" "$password"
-      tags=$(echo "$users" | yq '.tags[]' -)
+      tags=$(echo "$user" | yq '.tags[]' -)
       comma_separated=$(echo "${tags[*]}" | xargs | sed -e 's/ /,/g')
       rabbitmqctl set_user_tags "$name" "$comma_separated"
 
-      permissions=$(echo "$users" | yq '.permissions[]' -)
+      permissions=$(echo "$user" | yq '.permissions[]' -)
       for permission in "${permissions[@]}"; do
         vhost=$(echo "$permission" | yq '.vhost // "/"' -)
         conf=$(echo "$permission" | yq '.conf // ".*"' -)
@@ -113,14 +113,14 @@ function add_users() {
   done
 }
 
+# The RabbitMQ container does not contain yq
+# But it is needed to apply the configuration
+if ! command -v yq >/dev/null 2>&1; then
+    apk add yq > /dev/null 2>&1
+fi
+
 case $CMD in
   apply)
-    # The RabbitMQ container does not contain yq
-    # But it is needed to apply the configuration
-    if ! command -v yq >/dev/null 2>&1; then
-        apk add yq > /dev/null 2>&1
-    fi
-
     echo "Apply config $YAML_FILE"
 
     plugins_array=$(yq eval '.rabbitmq.plugins[]' "$YAML_FILE")
@@ -135,7 +135,23 @@ case $CMD in
     ;;
 
   wipe)
-    echo "Wipe stuff"
+    users_json=$(rabbitmqctl list_users --silent --formatter json)
+    readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
+    for user in "${users_existing[@]}"; do
+      user=$(echo -n "$user" | tr -d '\n')
+      if [ "$user" != "rabbitmq" ]; then
+        rabbitmqctl delete_user "$user"
+      fi
+    done
+
+    vhosts_json=$(rabbitmqctl list_vhosts --formatter json)
+    readarray vhosts_existing < <(echo "$vhosts_json" | yq -o=y -I=0 '.[].name' -)
+    for host in "${vhosts_existing[@]}"; do
+      host=$(echo -n "$host" | tr -d '\n')
+      if [ "$host" != "/" ]; then
+        rabbitmqctl delete_vhost "$host"
+      fi
+    done
     ;;
   watch)
     subcommand="$2"
@@ -154,6 +170,11 @@ case $CMD in
     echo "—————"
     echo "Create queues, users and add 'plugins' according to configuration (see .ddev/config.rabbitmq.yaml)"
     echo "👉 ddev rabbitmq apply"
+    echo ""
+    echo -e "\033[1mWipe\033[0m"
+    echo "—————"
+    echo "Clear vhosts, queues and users (only vhost '/' and user 'rabbitmq' are kept)"
+    echo "👉 ddev rabbitmq wipe"
     echo ""
     echo -e "\033[1mWatcher\033[0m"
     echo "———————"
