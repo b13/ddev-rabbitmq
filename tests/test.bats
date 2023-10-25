@@ -29,10 +29,8 @@ setup() {
 
 @test "See expected permissions for users in vhost=ddev-vhost" {
   result=$(ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost)
-  expected='[ {"user":"ddev-admin","configure":".*","write":".*","read":".*"},{"user":"rabbitmq","configure":".*","write":".*","read":".*"} ]'
-  echo "############################################################"
-  echo $result
-  echo "############################################################"
+  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
+
   [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
 }
 
