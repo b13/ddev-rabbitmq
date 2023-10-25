@@ -11,4 +11,4 @@ project_files:
 
 # Shell actions that can be done during removal of the add-on
 removal_actions:
- - rm -f ./.ddev/rabbitmq-schema.json
+ - rm -f "${DDEV_APPROOT}/.ddev/rabbitmq-schema.json"
