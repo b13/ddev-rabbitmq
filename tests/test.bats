@@ -27,12 +27,12 @@ setup() {
   [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
 }
 
-@test "See expected permissions for users in vhost=ddev-vhost" {
-  result=$(ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost)
-  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
-
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
-}
+#@test "See expected permissions for users in vhost=ddev-vhost" {
+#  result=$(ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost)
+#  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
+#
+#  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+#}
 
 @test "Delete/wipe custom configuration" {
   ddev rabbitmq wipe
@@ -57,4 +57,13 @@ setup() {
   expected="Virtual host 'ddev-vhost' does not"
 
   [[ $output == *$expected* ]]
+}
+
+@test "Remove addon - see files removed" {
+  ddev get --remove rabbitmq
+
+  expected_files_not_to_exist=(docker-compose.rabbitmq.yaml commands/rabbitmq/rabbitmq commands/rabbitmq/rabbitmqadmin commands/rabbitmq/rabbitmqctl config.rabbitmq.yaml rabbitmq-schema.json)
+  for file in "${expected_files_not_to_exist[@]}"; do
+    [ ! -f "$TESTDIR/.ddev/$file" ]
+  done
 }

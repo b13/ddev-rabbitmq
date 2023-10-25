@@ -26,4 +26,4 @@ services:
       - rabbitmq:rabbitmq
 volumes:
   rabbitmq:
-    name: "ddev-${DDEV_SITENAME}_rabbitmq"
+    name: "${DDEV_SITENAME}_rabbitmq"
