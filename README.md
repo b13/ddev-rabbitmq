@@ -16,17 +16,41 @@ the server URL might be `amqp://ddev-<projectname>-rabbitmq:5672`.
 
 For more details check the connection section below.
 
-### Apply YAML configuration
+### YAML configuration
 
 The [config.rabbitmq.yaml](config.rabbitmq.yaml) describes
 vhosts, queues, users, and plugins.
 
-The configuration can be applied with the following command: 
+The configuration can be applied with the following command:
+
 ```bash
 ddev rabbitmq apply
 ```
 
 :warning: This may not cover all possible configuration values! But it is a good start.
+
+Remove rabbitmq configuration but keep default user (`rabbitmq`) and vhost (`/`):
+
+```bash
+ddev rabbitmq wipe
+```
+
+### Commands
+
+Everything possible in Management UI can be done using `rabbitmqadmin`.
+User and password are set 
+
+```
+ddev rabbitmqadmin --help
+```
+
+`rabbitmqctl` is used to manage the cluster and nodes
+
+```
+ddev rabbitmqctl --help
+```
+
+ℹ️`rabbitmqadmin` and `rabbitmqctl` share a some functions. Both are needed for full configuration.
 
 ## Connection
 
@@ -40,23 +64,6 @@ per site in the [docker-compose.rabbitmq.yaml](docker-compose.rabbitmq.yaml).
 
 The management UI can be accessed through `http://<DDEV_SITENAME>.ddev.site:15672` on the host machine. 
 Username "rabbitmq", password "rabbitmq".
-
-### Use the API to manage rabbitmq
-
-Within the ddev web container it is easy to utilize the HTTP API to
-create a custom queue, get stats and so on.
-
-Create a queue called "ddev"
-
-```
-curl -u rabbitmq:rabbitmq -H "Content-Type: application/json" -X PUT http://rabbitmq:15672/api/queues/%2F/ddev --data-raw '{"auto_delete": false,"durable": true,"arguments": {}}'
-```
-
-Create the message "DDEV is awesome" in the "ddev" queue
-
-```
-curl -u rabbitmq:rabbitmq -H "Content-Type: application/json" -X POST -d '{"properties":{},"routing_key":"ddev","payload_encoding": "string", "payload":"DDEV is awesome"}' http://rabbitmq:15672/api/exchanges/%2f/amq.default/publish
-```
 
 For more information about the HTTP API see the [official documentation](https://rawcdn.githack.com/rabbitmq/rabbitmq-server/v3.12.6/deps/rabbitmq_management/priv/www/api/index.html)
 
