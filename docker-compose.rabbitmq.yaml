@@ -1,5 +1,4 @@
 #ddev-generated
-version: '3.6'
 services:
   rabbitmq:
     container_name: ddev-${DDEV_SITENAME}-rabbitmq
