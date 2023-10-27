@@ -13,7 +13,7 @@ CMD=$1
 # Subcommands allowed to watch
 ALLOWED_DISPLAY_ARGUMENTS=("overview" "connections" "channels" "consumers" "exchanges" "queues" "bindings" "users" "vhosts" "permissions" "nodes" "parameters" "policies" "operator_policies" "vhost_limits" )
 
-YAML_FILE=/mnt/ddev_config/config.rabbitmq.yaml
+YAML_FILE=/mnt/ddev_config/rabbitmq/config.yaml
 
 function watcher() {
   subcommand=$1
@@ -41,7 +41,7 @@ function watcher() {
 function add_vhosts() {
   vhosts_json=$(rabbitmqctl list_vhosts --formatter json)
   readarray vhosts_existing < <(echo "$vhosts_json" | yq -o=y -I=0 '.[].name' -)
-  readarray vhosts < <(yq -o=j -I=0 '.rabbitmq.vhost[]' $YAML_FILE )
+  readarray vhosts < <(yq -o=j -I=0 '.vhost[]' $YAML_FILE )
   for vhost in "${vhosts[@]}"; do
     name=$(echo "$vhost" | yq '.name // ""' -)
 
@@ -64,7 +64,7 @@ function add_vhosts() {
 }
 
 function add_queues() {
-  readarray queues < <(yq -o=j -I=0 '.rabbitmq.queue[]' $YAML_FILE )
+  readarray queues < <(yq -o=j -I=0 '.queue[]' $YAML_FILE )
   for queue in "${queues[@]}"; do
     name=$(echo "$queue" | yq '.name' -)
     vhost=$(echo "$queue" | yq '.vhost // "/"' -)
@@ -84,7 +84,7 @@ function add_queues() {
 function add_users() {
   users_json=$(rabbitmqctl list_users --silent --formatter json)
   readarray users_existing < <(echo "$users_json" | yq -o=y -I=0 '.[].user' -)
-  readarray users < <(yq -o=j -I=0 '.rabbitmq.user[]' $YAML_FILE )
+  readarray users < <(yq -o=j -I=0 '.user[]' $YAML_FILE )
 
   for user in "${users[@]}"; do
     name=$(echo "$user" | yq '.name // ""' -)
@@ -121,7 +121,7 @@ case $CMD in
   apply)
     echo "Apply config $YAML_FILE"
 
-    plugins_array=$(yq eval '.rabbitmq.plugins[]' "$YAML_FILE")
+    plugins_array=$(yq eval '.plugins[]' "$YAML_FILE")
     plugins=$(echo "${plugins_array[*]}" | tr '\n' ' ' | xargs)
     rabbitmq-plugins enable "$plugins"
 
@@ -166,7 +166,7 @@ case $CMD in
     echo "——————————————"
     echo -e "\033[1mApply\033[0m"
     echo "—————"
-    echo "Create queues, users and add 'plugins' according to configuration (see .ddev/config.rabbitmq.yaml)"
+    echo "Create queues, users and add 'plugins' according to configuration (see .ddev/rabbitmq/config.yaml)"
     echo "👉 ddev rabbitmq apply"
     echo ""
     echo -e "\033[1mWipe\033[0m"
