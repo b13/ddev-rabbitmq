@@ -11,8 +11,8 @@ ddev get ochorocho/ddev-rabbitmq && ddev restart
 
 ## Configuration
 
-From within the container, the RabbitMQ container is reached at hostname: `ddev-<projectname>-rabbitmq`, port: 5672, so
-the server URL might be `amqp://ddev-<projectname>-rabbitmq:5672`.
+From within the container, the RabbitMQ container is reached at hostname: `rabbitmq` on port 5672, so
+the server URL will be `amqp://rabbitmq:5672`.
 
 For more details check the connection section below.
 
@@ -57,22 +57,16 @@ ddev rabbitmqctl --help
 RabbitMQ is accessible from the host machine itself as well as between the containers on the same network, and comes 
 with a nice management UI for ease of use.
 
-__Important:__ If you need to run multiple ddev sites that use this RabbitMQ service, you will have to alter the ports 
-per site in the [docker-compose.rabbitmq.yaml](docker-compose.rabbitmq.yaml).
-
 ### Management UI
 
-The management UI can be accessed through `http://<DDEV_SITENAME>.ddev.site:15672` on the host machine. 
-Username "rabbitmq", password "rabbitmq".
+The management UI can be accessed through `https://<DDEV_SITENAME>.ddev.site:15673` on the host machine. 
+Username: "rabbitmq", password: "rabbitmq". This is also shown in `ddev describe`.
 
 For more information about the HTTP API see the [official documentation](https://rawcdn.githack.com/rabbitmq/rabbitmq-server/v3.12.6/deps/rabbitmq_management/priv/www/api/index.html)
 
 ### AMQP protocol access
 
-You can access the RabbitMQ service through it's AMQP protocol two ways:
-
-* From the host machine: `amqp://<DDEV_SITENAME>.ddev.site:5672`
-* From docker containers on the same docker network (ddev_default): `amqp://ddev-<projectname>-rabbitmq:5672`
+You can access the RabbitMQ service through its AMQP protocol inside any DDEV container via `amqp://rabbitmq:5672`
 
 **Originally Contributed by [@Graloth](https://github.com/Graloth) in [ddev-contrib](https://github.com/ddev/ddev-contrib/tree/master/docker-compose-services/rabbitmq)**
 
