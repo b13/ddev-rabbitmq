@@ -6,9 +6,10 @@ project_files:
   - commands/rabbitmq/rabbitmq
   - commands/rabbitmq/rabbitmqadmin
   - commands/rabbitmq/rabbitmqctl
-  - config.rabbitmq.yaml
-  - rabbitmq-schema.json
+  - rabbitmq/config.yaml
+  - rabbitmq/schema.json
 
-# Shell actions that can be done during removal of the add-on
 removal_actions:
- - rm -f "${DDEV_APPROOT}/.ddev/rabbitmq-schema.json"
+  # JSON can not contain "ddev-generated" comment and this file is not intended
+  # to be modified therefore it is removed manually on removal
+  - rm -f "${DDEV_APPROOT}/.ddev/rabbitmq/schema.json"
