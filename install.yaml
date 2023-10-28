@@ -3,9 +3,7 @@ name: rabbitmq
 
 project_files:
   - docker-compose.rabbitmq.yaml
-  - commands/rabbitmq/rabbitmq
-  - commands/rabbitmq/rabbitmqadmin
-  - commands/rabbitmq/rabbitmqctl
+  - commands/rabbitmq/
   - rabbitmq/config.yaml
   - rabbitmq/schema.json
 
