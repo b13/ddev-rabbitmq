@@ -1,4 +1,5 @@
 {
+  "#ddev-generated":true,
   "$schema": "./config.yaml",
   "type": "object",
   "properties": {

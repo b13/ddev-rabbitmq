@@ -6,8 +6,3 @@ project_files:
   - commands/rabbitmq/
   - rabbitmq/config.yaml
   - rabbitmq/schema.json
-
-removal_actions:
-  # JSON can not contain "ddev-generated" comment and this file is not intended
-  # to be modified therefore it is removed manually on addon removal
-  - rm -f "${DDEV_APPROOT}/.ddev/rabbitmq/schema.json"

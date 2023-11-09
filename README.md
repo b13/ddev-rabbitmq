@@ -6,7 +6,7 @@ machine itself.
 ## Installation
 
 ```
-ddev get ochorocho/ddev-rabbitmq && ddev restart
+ddev get b13/ddev-rabbitmq && ddev restart
 ```
 
 ## Configuration
@@ -70,4 +70,4 @@ You can access the RabbitMQ service through its AMQP protocol inside any DDEV co
 
 **Originally Contributed by [@Graloth](https://github.com/Graloth) in [ddev-contrib](https://github.com/ddev/ddev-contrib/tree/master/docker-compose-services/rabbitmq)**
 
-**Maintained by [@ochorocho](https://github.com/ochorocho)**
+**Maintained by [@b13](https://github.com/b13)**
