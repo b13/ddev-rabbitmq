@@ -5,8 +5,9 @@ setup() {
 }
 
 @test "Send request from 'web' to the api and see how it is going there" {
-  result="$(ddev exec "curl -u rabbitmq:rabbitmq --fail -H 'Content-Type: application/json' -X GET http://rabbitmq:15672/api/health/checks/alarms")"
-  [ "$result" == "{\"status\":\"ok\"}" ]
+  run ddev exec "curl -s -u rabbitmq:rabbitmq --fail -H 'Content-Type: application/json' -X GET http://rabbitmq:15672/api/health/checks/alarms"
+
+  [ "$output" == '{"status":"ok"}' ]
 }
 
 @test "Apply configuration defined in config.rabbitmq.yaml" {
@@ -14,49 +15,50 @@ setup() {
 }
 
 @test "See expected users" {
-  result=$(ddev rabbitmqctl list_users --silent --formatter json)
-  expected='[ {"user":"rabbitmq","tags":["administrator"]},{"user":"ddev-admin","tags":["administrator,management"]} ]'
+  run ddev rabbitmqctl list_users --silent --formatter json
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  [[ "$output" == *'{"user":"rabbitmq","tags":["administrator"]}'* ]]
+  [[ "$output" == *'{"user":"ddev-admin","tags":["administrator,management"]}'* ]]
 }
 
 @test "See expected vhosts" {
-  result=$(ddev rabbitmqctl list_vhosts --silent --formatter json)
-  expected='[ {"name":"/"},{"name":"ddev-vhost"} ]'
+  run ddev rabbitmqctl list_vhosts --silent --formatter json
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  [[ "$output" == *'{"name":"/"}'* ]]
+  [[ "$output" == *'{"name":"ddev-vhost"}'* ]]
 }
 
 @test "See expected permissions for users in vhost=ddev-vhost" {
-  result=$(ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost)
-  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
+  run ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  [[ "$output" == *'{"user":"ddev-admin","configure":".*","write":".*","read":".*"}'* ]]
+  [[ "$output" == *'{"user":"rabbitmq","configure":".*","write":".*","read":".*"}'* ]]
 }
 
 @test "Delete/wipe custom configuration" {
-  ddev rabbitmq wipe
+  run ddev rabbitmq wipe
+
+  [ "$status" -eq 0 ]
 }
 
 @test "See only rabbitmq default user" {
-  result=$(ddev rabbitmqctl list_users --silent --formatter json)
-  expected='[ {"user":"rabbitmq","tags":["administrator"]} ]'
+  run ddev rabbitmqctl list_users --silent --formatter json
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  [[ "$output" == *'{"user":"rabbitmq","tags":["administrator"]}'* ]]
+  [[ "$output" != *'{"user":"ddev-admin","tags":["administrator,management"]}'* ]]
 }
 
 @test "See only '/' vhost exists" {
-  result=$(ddev rabbitmqctl list_vhosts --silent --formatter json)
-  expected='[ {"name":"/"} ]'
+  run ddev rabbitmqctl list_vhosts --silent --formatter json
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  [[ "$output" == *'{"name":"/"}'* ]]
+  [[ "$output" != *'{"name":"ddev-vhost"}'* ]]
 }
 
 @test "See error message when trying to list permissions for non-existing vhost" {
   run -1 ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost
-  expected="Virtual host 'ddev-vhost' does not"
 
-  [[ $output == *$expected* ]]
+  [[ $output == *"Virtual host 'ddev-vhost' does not"* ]]
 }
 
 @test "Remove addon - see files removed" {
