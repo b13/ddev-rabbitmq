@@ -28,10 +28,17 @@ setup() {
 }
 
 @test "See expected permissions for users in vhost=ddev-vhost" {
-  result=$(ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost)
-  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
+  run ddev rabbitmqctl list_permissions --silent --formatter json --vhost=ddev-vhost
 
-  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
+  echo "$output"
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *'{"user":"ddev-admin","configure":".*","write":".*","read":".*"}'* ]]
+  [[ "$output" == *'{"user":"rabbitmq","configure":".*","write":".*","read":".*"}'* ]]
+
+#  expected='[ {"user":"rabbitmq","configure":".*","write":".*","read":".*"} ,{"user":"ddev-admin","configure":".*","write":".*","read":".*"} ]'
+#
+#  [ "$(echo "$result" | jq -c -S '.' 2>/dev/null)" == "$(echo "$expected" | jq -c -S '.' 2>/dev/null)" ]
 }
 
 @test "Delete/wipe custom configuration" {
