@@ -68,6 +68,11 @@ For more information about the HTTP API see the [official documentation](https:/
 
 You can access the RabbitMQ service through its AMQP protocol inside any DDEV container via `amqp://rabbitmq:5672`
 
+## Examples:
+
+* [TYPO3](USAGE.md)
+
+
 **Originally Contributed by [@Graloth](https://github.com/Graloth) in [ddev-contrib](https://github.com/ddev/ddev-contrib/tree/master/docker-compose-services/rabbitmq)**
 
 **Maintained by [@b13](https://github.com/b13)**
