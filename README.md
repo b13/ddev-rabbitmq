@@ -5,7 +5,15 @@ machine itself.
 
 ## Installation
 
+For DDEV v1.23.5 or above run
+
+```bash
+ddev add-on get b13/ddev-rabbitmq && ddev restart
 ```
+
+For earlier versions of DDEV run
+
+```bash
 ddev get b13/ddev-rabbitmq && ddev restart
 ```
 
@@ -40,13 +48,13 @@ ddev rabbitmq wipe
 Everything possible in Management UI can be done using `rabbitmqadmin`.
 User and password are set 
 
-```
+```bash
 ddev rabbitmqadmin --help
 ```
 
 `rabbitmqctl` is used to manage the cluster and nodes
 
-```
+```bash
 ddev rabbitmqctl --help
 ```
 
