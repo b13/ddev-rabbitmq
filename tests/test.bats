@@ -61,6 +61,12 @@ setup() {
   [[ $output == *"Virtual host 'ddev-vhost' does not"* ]]
 }
 
+@test "See php amqp module loaded" {
+  run ddev exec "php -m | grep amqp"
+
+  [[ $output == "amqp" ]]
+}
+
 @test "Remove addon - see files removed" {
   ddev get --remove rabbitmq
 
