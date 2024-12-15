@@ -67,6 +67,12 @@ setup() {
   [[ $output == "amqp" ]]
 }
 
+@test "See php pcntl module loaded on cli" {
+  run ddev exec "php -m | grep pcntl"
+
+  [[ $output == "pcntl" ]]
+}
+
 @test "Remove addon - see files removed" {
   ddev get --remove rabbitmq
 
