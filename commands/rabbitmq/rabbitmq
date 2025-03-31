@@ -123,7 +123,7 @@ case $CMD in
 
     plugins_array=$(yq eval '.plugins[]' "$YAML_FILE")
     plugins=$(echo "${plugins_array[*]}" | tr '\n' ' ' | xargs)
-    rabbitmq-plugins enable "$plugins"
+    rabbitmq-plugins enable $plugins
 
     add_vhosts
     # Ensure the default admin "rabbitmq" has permissions for all virtual hosts
