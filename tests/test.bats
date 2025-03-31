@@ -10,8 +10,20 @@ setup() {
   [ "$output" == '{"status":"ok"}' ]
 }
 
-@test "Apply configuration defined in config.rabbitmq.yaml" {
-  ddev rabbitmq apply
+@test "Apply configuration rabbitmq/config.yaml (default)" {
+  run ddev rabbitmq apply
+
+  [[ "$output" != *'plugins_not_found'* ]]
+  [ "$status" -eq 0 ]
+}
+
+@test "Apply configuration tests/config.test.yaml (multiple plugins enabled)" {
+  cp "${DIR}/config.test.yaml" "${TESTDIR}/.ddev/rabbitmq/config.yaml"
+
+  run ddev rabbitmq apply
+
+  [[ "$output" != *'plugins_not_found'* ]]
+  [ "$status" -eq 0 ]
 }
 
 @test "See expected users" {
