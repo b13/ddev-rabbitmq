@@ -26,7 +26,7 @@ For more details check the connection section below.
 
 ### YAML configuration
 
-The [config.rabbitmq.yaml](config.rabbitmq.yaml) describes
+The [rabbitmq/config.yaml](rabbitmq/config.yaml) describes
 vhosts, queues, users, and plugins.
 
 The configuration can be applied with the following command:
