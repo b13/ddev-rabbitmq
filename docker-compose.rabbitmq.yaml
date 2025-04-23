@@ -3,7 +3,7 @@ services:
   rabbitmq:
     container_name: ddev-${DDEV_SITENAME}-rabbitmq
     hostname: ${DDEV_SITENAME}-rabbitmq
-    image: "rabbitmq:3-management-alpine"
+    image: "rabbitmq:4-management-alpine"
     expose:
       - 15672
     environment:
