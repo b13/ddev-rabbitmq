@@ -1,21 +1,24 @@
-# RabbitMQ
+[![add-on registry](https://img.shields.io/badge/DDEV-Add--on_Registry-blue)](https://addons.ddev.com)
+[![tests](https://github.com/ddev/ddev-rabbitmq/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ddev/ddev-rabbitmq/actions/workflows/tests.yml?query=branch%3Amain)
+[![last commit](https://img.shields.io/github/last-commit/ddev/ddev-rabbitmq)](https://github.com/ddev/ddev-rabbitmq/commits)
+[![release](https://img.shields.io/github/v/release/ddev/ddev-rabbitmq)](https://github.com/ddev/ddev-rabbitmq/releases/latest)
 
-This DDEV add-on provides a RabbitMQ service and creates users/queues
-according to the configuration defined in `.ddev/rabbitmq/config.yaml`.
+# DDEV RabbitMQ
+
+## Overview
+
+[RabbitMQ](https://www.rabbitmq.com/) is a message-queueing software also known as a message broker or queue manager.
+
+This add-on integrates RabbitMQ into your [DDEV](https://ddev.com/) project and creates users/queues according to the configuration defined in [`.ddev/rabbitmq/config.yaml`](rabbitmq/config.yaml).
 
 ## Installation
 
-For DDEV v1.23.5 or above run
-
 ```bash
-ddev add-on get ddev/ddev-rabbitmq && ddev restart
+ddev add-on get ddev/ddev-rabbitmq
+ddev restart
 ```
 
-For earlier versions of DDEV run
-
-```bash
-ddev get ddev/ddev-rabbitmq && ddev restart
-```
+After installation, make sure to commit the `.ddev` directory to version control.
 
 ## Configuration
 
@@ -41,7 +44,7 @@ ddev rabbitmq apply
 To ensure the configuration is applied automatically on boot, add the following
 hook to your `.ddev/config.yaml`:
 
-```bash
+```yaml
 hooks:
   post-start:
     - exec-host: ddev solrctl apply
@@ -53,47 +56,56 @@ Remove rabbitmq configuration but keep default user (`rabbitmq`) and vhost (`/`)
 ddev rabbitmq wipe
 ```
 
-### Commands
+## Usage
 
-You can configure everything available in the RabbitMQ Management UI using `ddev rabbitmqadmin`.
-Authentication is pre-configured, so there's no need to specify a username or password.
-
-```bash
-ddev rabbitmqadmin --help
-```
-
-`ddev rabbitmqctl` is used to manage the cluster and nodes
-
-```bash
-ddev rabbitmqctl --help
-```
+| Command | Description |
+| ------- | ----------- |
+| `ddev rabbitmq --help` | RabbitMQ custom helper command |
+| `ddev rabbitmqadmin --help` | RabbitMQ Management CLI (no auth required) |
+| `ddev rabbitmqctl --help` | Used to manage the cluster and nodes |
+| `ddev launch :15673` | Run RabbitMQ Management UI in the browser (credentials `rabbitmq:rabbitmq`) |
+| `ddev describe` | View service status and used ports for RabbitMQ |
+| `ddev logs -s rabbitmq` | Check RabbitMQ logs |
 
 ℹ️`rabbitmqadmin` and `rabbitmqctl` share some functions. Both are needed for full configuration.
 
 ## Connection
 
-RabbitMQ is accessible from the host machine itself as well as between the containers on the same network, and comes 
+RabbitMQ is accessible from the host machine itself as well as between the containers on the same network, and comes
 with a nice management UI for ease of use.
 
 ### Management UI
 
-The management UI can be accessed through `https://<DDEV_SITENAME>.ddev.site:15673` on the host machine. 
+The management UI can be accessed through `https://<DDEV_SITENAME>.ddev.site:15673` (`ddev launch :15673`) on the host machine.
 
 Management UI credentials
 
 * Username: `rabbitmq`
 * Password: `rabbitmq`
 
-For more information about the HTTP API see the [official documentation](https://www.rabbitmq.com/docs)
+For more information about the HTTP API see the [official documentation](https://www.rabbitmq.com/docs).
 
 ### AMQP protocol access
 
 You can access the RabbitMQ service through its AMQP protocol inside any DDEV container via `amqp://rabbitmq:5672`
 
-## Examples:
+## Advanced Customization
+
+To change the Docker image:
+
+```bash
+ddev dotenv set .ddev/.env.rabbitmq --rabbitmq-docker-image="rabbitmq:4-management-alpine"
+ddev add-on get ddev/ddev-rabbitmq
+ddev restart
+```
+
+Make sure to commit the `.ddev/.env.rabbitmq` file to version control.
+
+## Examples
 
 * [TYPO3](USAGE.md)
 
+## Credits
 
 **Originally Contributed by [@Graloth](https://github.com/Graloth) in [ddev-contrib](https://github.com/ddev/ddev-contrib/tree/master/docker-compose-services/rabbitmq)**
 
