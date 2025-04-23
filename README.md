@@ -78,7 +78,11 @@ with a nice management UI for ease of use.
 ### Management UI
 
 The management UI can be accessed through `https://<DDEV_SITENAME>.ddev.site:15673` on the host machine. 
-Username: "rabbitmq", password: "rabbitmq". This is also shown in `ddev describe`.
+
+Management UI credentials
+
+* Username: `rabbitmq`
+* Password: `rabbitmq`
 
 For more information about the HTTP API see the [official documentation](https://www.rabbitmq.com/docs)
 
