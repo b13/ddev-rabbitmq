@@ -1,4 +1,3 @@
-# Details about the install.yaml file are at https://ddev.readthedocs.io/en/latest/users/extend/additional-services/#sections-and-features-of-ddev-get-add-on-installyaml
 name: rabbitmq
 
 project_files:
@@ -7,3 +6,5 @@ project_files:
   - commands/rabbitmq/
   - rabbitmq/config.yaml
   - rabbitmq/schema.json
+
+ddev_version_constraint: '>= v1.24.3'
