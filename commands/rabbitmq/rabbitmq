@@ -5,9 +5,6 @@
 ## Usage: rabbitmq
 ## Example: ddev rabbitmq
 
-# @todo
-# * Test amqp, whatever it is doing
-
 CMD=$1
 
 # Subcommands allowed to watch
@@ -58,7 +55,7 @@ function add_vhosts() {
 
       rabbitmqctl add_vhost $name $description_option $tags_option $default_queue_type_option || exit 1
     else
-      echo "ℹ️vhost '$name' already exists! To update a vhost please delete it first."
+      echo "ℹ️ vhost '$name' already exists! To update a vhost please delete it first."
     fi
   done
 }
@@ -76,7 +73,7 @@ function add_queues() {
       durable=$(echo "$queue" | yq '.durable // "true"' -)
       rabbitmqadmin declare queue --vhost="$vhost" name="$name" durable="$durable"  -u "$RABBITMQ_DEFAULT_USER" -p "$RABBITMQ_DEFAULT_PASS" || exit 1
     else
-      echo "ℹ️Queue '$name' already exists in vhost '$vhost'! To update the queue please delete it first."
+      echo "ℹ️ Queue '$name' already exists in vhost '$vhost'! To update the queue please delete it first."
     fi
   done
 }
@@ -106,7 +103,7 @@ function add_users() {
         rabbitmqctl set_permissions -p "$vhost" "$name" "$conf" "$write" "$read" || exit 1
       done
     else
-      echo "ℹ️User '$name' already exists! To update a user please delete it first."
+      echo "ℹ️ User '$name' already exists! To update a user please delete it first."
     fi
   done
 }
