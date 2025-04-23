@@ -108,6 +108,10 @@ health_checks() {
   assert_output "pcntl"
 
   echo "Remove addon - see files removed" >&3
+  expected_files_not_to_exist=(docker-compose.rabbitmq.yaml commands/rabbitmq/rabbitmq commands/rabbitmq/rabbitmqadmin commands/rabbitmq/rabbitmqctl rabbitmq/config.yaml rabbitmq/schema.json)
+  for file in "${expected_files_not_to_exist[@]}"; do
+    assert_file_exist "$TESTDIR/.ddev/$file"
+  done
   run ddev add-on remove rabbitmq
   assert_success
   expected_files_not_to_exist=(docker-compose.rabbitmq.yaml commands/rabbitmq/rabbitmq commands/rabbitmq/rabbitmqadmin commands/rabbitmq/rabbitmqctl rabbitmq/config.yaml rabbitmq/schema.json)
