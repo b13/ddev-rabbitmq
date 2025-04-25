@@ -107,6 +107,11 @@ health_checks() {
   assert_success
   assert_output "pcntl"
 
+  echo "See launch command is working" >&3
+  DDEV_DEBUG=true run ddev rabbitmq launch
+  assert_success
+  assert_output --partial "FULLURL https://${PROJNAME}.ddev.site:15673"
+
   echo "Remove addon - see files removed" >&3
   expected_files_not_to_exist=(docker-compose.rabbitmq.yaml commands/rabbitmq/rabbitmq commands/rabbitmq/rabbitmqadmin commands/rabbitmq/rabbitmqctl rabbitmq/config.yaml rabbitmq/schema.json)
   for file in "${expected_files_not_to_exist[@]}"; do
