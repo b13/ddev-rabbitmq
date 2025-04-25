@@ -11,7 +11,11 @@ launch_rabbitmq_gui() {
     echo "Launching RabbitMQ Management UI..."
     echo "Login using 'rabbitmq' user and 'rabbitmq' password."
 
-    rabbitmq_port=$(ddev exec "yq '.services.rabbitmq.expose[0]' .ddev/docker-compose.rabbitmq.yaml")
+    PROTOCOL="HTTP"
+    if [ "${DDEV_PRIMARY_URL%://*}" != "http" ] && [ -z "${GITPOD_WORKSPACE_ID:-}" ] && [ "${CODESPACES:-}" != "true" ]; then
+      PROTOCOL="HTTPS"
+    fi
+    rabbitmq_port=$(ddev exec "yq '.services.rabbitmq.environment.${PROTOCOL}_EXPOSE | split(\":\")[0]' .ddev/.ddev-docker-compose-full.yaml")
     ddev launch :$rabbitmq_port
 }
 
