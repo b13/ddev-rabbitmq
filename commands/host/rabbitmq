@@ -24,7 +24,17 @@ case $CMD in
     launch_rabbitmq_gui
     ;;
   *)
-    # Run script within service container and pass in all arguments
-    ddev exec -s rabbitmq /mnt/ddev_config/commands/rabbitmq/rabbitmq $@
+    if [ "$CMD" = "--help" ] || [ -z "$CMD" ]; then
+        # Output help and display additional information about the "launch" command
+        ddev exec -s rabbitmq /mnt/ddev_config/commands/rabbitmq/rabbitmq --help
+        echo ""
+        echo -e "\033[1mLaunch\033[0m"
+        echo "—————"
+        echo "Launch RabbitMQ Management UI"
+        echo "👉 ddev rabbitmq launch"
+    else
+        # Run the script within service container and pass in all arguments
+        ddev exec -s rabbitmq /mnt/ddev_config/commands/rabbitmq/rabbitmq $@
+    fi
     ;;
 esac
